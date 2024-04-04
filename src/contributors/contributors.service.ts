@@ -42,7 +42,7 @@ export class ContributorsService {
 
     console.log('Month', currentMonth);
 
-    if (currentYear < year || (currentYear >= year && currentMonth <= month))
+    if (currentYear < year || (currentYear <= year && currentMonth < month))
       throw new BadRequestException('Time parameters are incorrect');
 
     let countOfNewContributors =
@@ -218,7 +218,23 @@ export class ContributorsService {
         );
       } else {
         contributons = await firstValueFrom(
-          this.httpService.get(nextLink, this.reqHeaders),
+          this.httpService.get(nextLink, this.reqHeaders).pipe(
+            catchError((error: AxiosError) => {
+              if (
+                error.response.status === 403 &&
+                error.response.statusText === 'rate limit exceeded'
+              ) {
+                const resetTimeRemaining =
+                  error.response.headers['x-ratelimit-reset'];
+                let date = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                date.setUTCSeconds(resetTimeRemaining);
+                throw new BadRequestException(
+                  `Rate limit exceeded. Retry after ${date}`,
+                );
+              }
+              throw 'An error happened!';
+            }),
+          ),
         );
       }
       nextLink = this.utilService.extractUrlForNextPage(
