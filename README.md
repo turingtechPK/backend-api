@@ -2,6 +2,8 @@
 
 Test for Turing tech
 
+Implements the GITHUB Api to find out first time contributors of a given repository of a company within a specific year and a month. Keeping in mind the rate limits of github API and an efficient method to fetch the data. 
+
 ## Installation
 
 ```bash
